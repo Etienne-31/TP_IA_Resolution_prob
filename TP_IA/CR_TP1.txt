@@ -1,0 +1,431 @@
+///////////////////1.1/////////
+
+Répertoitre cré, je travail avec tk_eclipse 
+
+///////////////1.2/////////////
+
+a)
+
+La commande final_state(S) permet de visualiser l'état final du jeu de Taquin 4*4 
+
+a voir avec final_state([ [f, g, a],[h,vide,b], [d, c, e] ]) où la matrice indiqué est un etat initiale 
+
+................................................................................................................................................................
+b)
+
+
+ - initial_state(Ini) : Permet de donner le où les états initiaux du jeux 
+
+
+ - nth1(L,Ini,Ligne) :  Retourne une ligne de la structure Ini et donc en faisant la query , ici on peut dire que Ligne = Ini(L)
+
+query : initial_state(Ini),nth1(L,Ini,Ligne)
+
+-> Renvoie les ligne de la structure Ini qui ici est la matrice 3*3 du jeu de taquin mise si dessous 
+
+
+ - nth1(C,Ligne, Constante) : renvoie les Constantes de la ligne en faisant Constante = Ligne(C)
+
+  -> donc nth1(C,Ligne, d) permet de localiser al constante "d" en mettant la query adapté , ici cette query serait 
+
+query = initial_state(Ini),nth1(L,Ini,Ligne), nth1(C,Ligne, d)
+
+renvoie 
+---------------------------------------------
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+L = 2
+Ligne = [a, f, d]
+C = 3
+Yes (0.00s cpu, solution 1, maybe more)
+----------------------------------------------
+
+"d" est à la 3eme place de la ligne 2 
+
+................................................................................................................
+c)
+
+ - final_state(Fin) : renvoie la matrice 3*3 qui est la solution au jeu de taquin 
+
+renvoie 
+-----------------------------------------
+final_state(Fin).
+Fin = [[a, b, c], [h, vide, d], [g, f, e]]
+-------------------------------------------
+
+
+ - nth1(3,Fin,Ligne) : Renvoi la 3ème ligne de la structure "Fin"
+
+query : final_state(Fin),nth1(3,Fin,Ligne)
+
+renvoie 
+-----------------------------------------
+Fin = [[a, b, c], [h, vide, d], [g, f, e]]
+Ligne = [g, f, e]
+-------------------------------------------
+
+
+ -  nth1(2,Ligne,P) : va renvoyer la constante à la position 2, de la structure Ligne , on va donc utiliser la query 
+
+query :  final_state(Fin),nth1(3,Fin,Ligne),nth1(2,Ligne,P)
+
+renvoi 
+-----------------------------------------------
+Fin = [[a, b, c], [h, vide, d], [g, f, e]]
+Ligne = [g, f, e]
+P = f
+-----------------------------------------------
+
+........................................................................................................................
+
+Explication _Variable :
+
+si on met "_" devant une variable dans un prédicat, cela veut dire que l'on ne va pas s'interesser a se qui sera mis dans cette variable et qu on va pas s en servir
+
+Explication findall :
+
+findall(Chose_a_mettre_dans_Liste,action_a_realiser(Chose_a_mettre_dans_Liste,...,Autre_element_de_action),Liste)
+
+Chose_a_mettre_dans_Liste : Peut être une liste d'action "A" ou alors un couple d'action et du coup suivant associé "[A,S]"
+action_a_realiser : peut être la règle à appliquer ou une action a faire 
+L : Représente la variable dasn laquelle on met la liste 
+
+d) 
+
+
+Pour trouver les actions possible à la situation initiale du jeu de taquin, je vais utiliser la query 
+
+query : initial_state(Ini), rule(A, Cost, Ini, _Suivant)
+
+où 
+
+A : représente les action réaliser ( ce qqui nous intéresse ) 
+Cost : le coût de chaque action ( 1 à chaque fois ici ) 
+Ini : la structure où l'on recherche 
+_Suivant : l'état suivant l'action réalisé mais ici ne nous intéresse pas donc on va mettre "_" devant 
+
+renvoi 
+----------------------------------------------------
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+A = up
+Cost = 1
+_Suivant = [[b, h, c], [a, vide, d], [g, f, e]]
+Yes (0.00s cpu, solution 1, maybe more)
+
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+A = left
+Cost = 1
+_Suivant = [[b, h, c], [a, f, d], [vide, g, e]]
+Yes (0.00s cpu, solution 2, maybe more)
+
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+A = right
+Cost = 1
+_Suivant = [[b, h, c], [a, f, d], [g, e, vide]]
+Yes (0.00s cpu, solution 3, maybe more)
+
+No (0.00s cpu)
+------------------------------------------------------
+
+.....................................................................................................................................................
+
+e) Pour mettre toutes les actions réalisable dans une liste on va mettre ca une liste en utilisant le prédicat findall
+
+query : initial_state(Ini),findall( A , rule(A, Cost, Ini, _Suivant),L)
+
+renvoi
+-------------------------------------------------------------
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+A = A
+Cost = Cost
+_Suivant = _Suivant
+L = [up, left, right]
+Yes (0.00s cpu)
+---------------------------------------------------------------
+
+
+................................................................................................................................................................
+
+e) On va aussi utiliser un findall mais en modifiant un peu la requête pour avoir des couples 
+
+query : initial_state(Ini),findall( [A,Suivant] , rule(A, Cost, Ini, Suivant),L)
+
+
+renvoi
+-------------------------------------------------------------
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+A = A
+Suivant = Suivant
+Cost = Cost
+L = [[up, [[b, h, c], [a, vide, d], [g, f, e]]], 
+[left, [[b, h, c], [a, f, d], [vide, g, e]]], 
+[right, [[b, h, c], [a, f, d], [g, e, vide]]]]
+---------------------------------------------------------------
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+2.  Développement des 2 heuristiques~
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+2.1 L’heuristique du nombre de pièces mal placées.
+
+Je vais d'abord écrire mon prédicat coordonnees qui me sert à écrire mon prédicat mal placé. Je me sers de ce qui a été fasi au dessus pour l'écrire.
+
+prédicat : coordonnees([L,C], Mat, Elt) : nth1(L,Mat,Ligne_result),nth1(C,Ligne_result,Elt).
+
+-> Je donne en argument la matrice ainsi que l'élément recherché puis je viens utiliser mes fonctions nth pour aller chercher la ligne ainsi que la colonne de l'element
+
+
+Et pour écrire mal_place 
+
+prédicat : malplace(P,U,F) :- coordonnees([L_f,C_f],F,P),coordonnees([L_f,C_f],U,P).
+
+-> Je viens d'abord chercher la position de l'élément cherché ( Ici P ), sa ligne et sa colonne seront mis dans L_f et C_f puis je réutilise ma 
+   predicat coordonnees ou je donne L_f et C_f en argument avec l'élement cherché pour qu'il me renvoie la pièce se situant à ces coordonnées et la comparan
+   pour qu'il me renvoie vrai ou faux si l'élément trouvé n'est pas le même que l'élément cherché passé en argument. 
+
+
+- Test coordonnees avec 
+
+query : initial_state(Ini),coordonnees([1,2],Ini,Elt)
+
+renvoi
+-----------------------------------------------------------------
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+Elt = h
+---------------------------------------------------------------	
+
+resultat okay 
+
+- Test pour trouver élément 
+
+query : initial_state(Ini),coordonnees([L,C],Ini,h)
+
+renvoi 
+--------------------------------------------------------------------
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+L = 1
+C = 2
+-------------------------------------------------------------------
+
+resultat okay 
+
+
+- test mal_place 
+
+Ini = [[b, h, c], [a, f, d], [g, vide, e]]
+  S = [[a, b, c], [h, vide, d], [g, f, e]]
+
+* test pas bien placé  
+
+query : final_state(F),initial_state(U),malplace(a,U,F)
+
+renvoi
+-------------------------------------------------------------------------
+No (0.00s cpu)
+--------------------------------------------------------------------
+
+
+
+* test bien placé  
+
+query : final_state(F),initial_state(U),malplace(e,U,F)
+
+renvoi
+-------------------------------------------------------------------------
+F = [[a, b, c], [h, vide, d], [g, f, e]]
+U = [[b, h, c], [a, f, d], [g, vide, e]]
+Yes (0.00s cpu, solution 1, maybe more)
+--------------------------------------------------------------------
+
+
+J'ai modifié malplace afin qu'au lieu que cela me dise si la Pièce donné en argument est bien placé il me renvoie true si la pièce est mal placé
+
+prédicat : malplace(P,U,F) :- coordonnees([L_f,C_f],F,P),coordonnees([L_f,C_f],U,P_bis),P\=P_bis. 
+
+-> On va chercher les coord de la pièce P placé en argument 
+-> On va chercher la pièce au Coordonnées trouvé dans le premier predicat et la mettre dans P_bis 
+-> On compare P et P_bis et si c'est pas les même, ca renvoi true 
+
+
+* test pas bien placé  
+
+query : final_state(F),initial_state(U),malplace(a,U,F)
+
+renvoi
+-------------------------------------------------------------------------
+F = [[a, b, c], [h, vide, d], [g, f, e]]
+U = [[b, h, c], [a, f, d], [g, vide, e]]
+Yes (0.00s cpu, solution 1, maybe more)
+--------------------------------------------------------------------
+
+Test okay 
+
+
+* test bien placé  
+
+query : final_state(F),initial_state(U),malplace(e,U,F)
+
+renvoi
+-------------------------------------------------------------------------
+No (0.00s cpu)
+--------------------------------------------------------------------
+
+
+test okay 
+
+.........................................................................................................................................
+
+a) Heuristique1 
+
+
+Je compte le nombre de pièce mal placées et le met dans une liste dont je récupère ensuite la longueur. 
+
+prédicat :  heuristique1(U, H) : final_state(F),findall(Piece,malplace(Piece,U,F),Liste),length(Liste,H).
+
+*test 
+
+
+F = [[a, b, c], [h, vide, d], [g, f, e]]
+U = [[b, h, c], [a, f, d], [g, vide, e]]
+
+query : initial_state(U),heuristique1(U, H)
+
+renvoi
+---------------------------------------------------------------------
+U = [[b, h, c], [a, f, d], [g, vide, e]]
+H = 4
+---------------------------------------------------------------------
+
+Test okay , pièce ma placé : b,h,a,f,vide = 5 
+
+
+...........................................................................................................................................
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+2.2 heuristique 2 ( Heuristique basé sur la distance de Manhatan ) 
+
+Pour cette heuristique je vais venir calculer les coordonnées de chaque pièce dans la matrice de l'état actuel et de l'état final pour ensuite. 
+
+Pour chaque pièce dont je calcul les coordonnées, je viens faire la valeur absolue de la différence des coordonnées finales et des coordonnées actuelles. 
+
+Ensuite je met le resutlat pour chaque pièce dans une liste et j'additionne ensuite tous les résultats. 
+
+Pour cela j'ai d'abord du définir un prédicat me permettant de calculer la distance d'une pièce à un certain état par rapport à son état final.
+
+
+prédicat :  calculdistance(U,F,Elt,Result) :- coordonnees([L_a,C_a],U,Elt),coordonnees([L_f,C_f],F,Elt),H_f is L_f + C_f,H_a is L_a + C_a,Result_nonabs is H_f - H_a,Result is abs(Result_nonabs).
+
+Puis j'ai ensuite définis le prédicat de ma deuxième heuristique. 
+
+prédicat :  heuristique2(U, H) :- final_state(F),findall(Result, (calculdistance(U,F,Elt,Result),Elt\=vide)    , List_distance),sumlist(List_distance,H).
+
+*Test du prédicat 
+
+query : initial_state(Ini),heuristique2(Ini,H)
+
+Je test mon Heuristique pour l'état initial
+
+renvoi
+----------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------
+
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+3. Algo A*
+
+
+test des primitives , on utilise un des arbres avl_test en fin du fichier avl pour les tester. 
+
+
+nil représente un arbre vide 
+
+Primitive : empty(Nil)
+
+renvoi
+-------------------------------------------------------------------------------------------------
+Yes 
+-------------------------------------------------------------------------------------------------
+
+alors que   :  empty(avl_test(1, nil))
+-> renvoi non
+
+Primitive : insert(Elem, nil, avl(nil,Elem,nil,0))
+-> Rajoute Element au nouvel arbre défini dans le dernier attribut 
+
+
+insert(Elem, AVL, NEW_AVL)
+-> Copie AVL en ayant mis le nouvel élément dans NEW_AVL
+
+
+Primitive : suppress(Elem, AVL, NEW_AVL)
+Va venir supprimer Elem de l'arbre si il esr present sinon renvoie le même arbre 
+
+
+Primitive : suppress_min(Min, AVL, NEW_AVL)
+-> Supprime le haut du tas 
+
+
+
+Primitive : put_flat(nil)
+
+renvoi
+-------------------------------------------------------------------------------------------------
+renvoie rie ncar arbe vide 
+-------------------------------------------------------------------------------------------------
+
+Primitive : put_flat(avl_test(5, avl(avl(nil,1,nil,0), 2, avl(nil,3,nil,0),1)	)
+
+renvoi
+-------------------------------------------------------------------------------------------------
+renvoie rie ncar arbe vide 
+-------------------------------------------------------------------------------------------------
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+3.1 Implémentation de P et Q par des arbres AVL
+
+
+
+J'ai écrit le main et la fonnction expend dans aetoile. 
+
+- Le main sert à initialiser les éléments de base de A* , cad Q, Pu et Pf. L'Heuristique de l'état initiale H_0 est 
+initialisé et permet d'avoir F_0. G_0 est égale à 0 au début. On insert ensuite les états initiaux dans Pf et Pu.
+
+prédicat : 
+
+main :-
+	initial_state(Ini),
+    G_0 is 0,
+    heuristique(Ini,H_0),
+    F_0 is G_0 + H_0,
+    empty(Pf),
+    empty(Pu),
+    empty(Q),
+    insert([[F_0,H_0,G_0],Ini],Pf,Pf1),
+    insert([Ini,[F_0,H_0,G_0],nil,nil],Pu,Pu1 ),                                /* Avec predecessuer et action qui mène au successuer*/
+    aetoile(Pf,Pu,Q).
+
+
+Test à faire plus tard 
+
+
+
+
+
+
+
+
+
+
+
